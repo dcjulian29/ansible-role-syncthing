@@ -1,6 +1,6 @@
 <configuration version="37">
 {% for folder in syncthing_folders %}
-    <folder id="{{ folder.id }}" label="{{ folder.label }}" path="{{ folder.path }}" type="{{ folder.type }}" rescanIntervalS="{{ folder.rescan_seconds | default(3600) }}" fsWatcherEnabled="{{ folder.file_watcher | default(true) | to_json }}" fsWatcherDelayS="{{ folder.watcher_delay_seconds | default(10) }}" ignorePerms="{{ folder.ignore_perms | default(false) }}" autoNormalize="true">
+    <folder id="{{ folder.id }}" label="{{ folder.label }}" path="{{ folder.path }}" type="{{ folder.type | default('sendreceive') }}" rescanIntervalS="{{ folder.rescan_seconds | default(3600) }}" fsWatcherEnabled="{{ folder.file_watcher | default(true) | to_json }}" fsWatcherDelayS="{{ folder.watcher_delay_seconds | default(10) }}" ignorePerms="{{ folder.ignore_perms | default(false) }}" autoNormalize="true">
         <filesystemType>basic</filesystemType>
 {% for device in folder.devices %}
         <device id="{{ device.id }}" introducedBy="">
