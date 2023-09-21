@@ -1,0 +1,25 @@
+---
+dependencies:
+  - role: dcjulian29.docker
+galaxy_info:
+  author: Julian Easterling
+  description: Ansible role to install and configure Syncthing
+  galaxy_tags:
+    - syncthing
+    - dcjulian29
+  license: Apache-2.0
+  min_ansible_version: 2.15.1
+  namespace: dcjulian29
+  platforms:
+    - name: Debian
+      versions:
+        - bullseye
+        - bookworm
+    - name: Ubuntu
+      versions:
+        - jammy
+    - name: EL
+      versions:
+        - "9"
+        - "8"
+  role_name: syncthing

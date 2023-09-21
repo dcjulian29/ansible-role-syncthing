@@ -1,0 +1,128 @@
+---
+- name: Ensure syncthing group is present
+  ansible.builtin.group:
+    name: "{{ syncthing_name }}"
+    gid: "{{ syncthing_gid }}"
+    state: present
+
+- name: Ensure syncthing user is present
+  ansible.builtin.user:
+    comment: Syncthing Container Account
+    group: "{{ syncthing_name }}"
+    home: "{{ syncthing_home }}"
+    name: "{{ syncthing_name }}"
+    shell: /sbin/nologin
+    uid: "{{ syncthing_uid }}"
+
+- name: Ensure UDP buffer sizes are 25MB
+  ansible.posix.sysctl:
+    name: "{{ item }}"
+    value: 26214400
+    state: present
+  loop:
+    - net.core.rmem_default
+    - net.core.wmem_default
+    - net.core.rmem_max
+    - net.core.wmem_max
+
+- name: Ensure inotify limit is adjusted
+  ansible.posix.sysctl:
+    name: fs.inotify.max_user_watches
+    value: 204800
+    state: present
+
+- name: Pull Syncthing docker image
+  community.docker.docker_image:
+    name: "{{ syncthing_image }}"
+    source: pull
+    tag: "{{ syncthing_imagetag }}"
+  notify: Remove Syncthing
+
+- name: Ensure all handlers run before continuing
+  ansible.builtin.meta: flush_handlers
+
+- name: Ensure Syncthing certificate is present
+  ansible.builtin.copy:
+    content: "{{ syncthing_cert }}"
+    dest: "{{ syncthing_home }}/cert.pem"
+    owner: "{{ syncthing_uid }}"
+    group: "{{ syncthing_gid }}"
+    mode: "0644"
+  when: syncthing_cert | length > 0
+  notify: Restart Syncthing
+  tags:
+    - config
+
+- name: Ensure Syncthing key file is present
+  ansible.builtin.copy:
+    content: "{{ syncthing_key }}"
+    dest: "{{ syncthing_home }}/key.pem"
+    owner: "{{ syncthing_uid }}"
+    group: "{{ syncthing_gid }}"
+    mode: "0600"
+  when: syncthing_key | length > 0
+  notify: Restart Syncthing
+  tags:
+    - config
+
+- name: Ensure HTTPS certificate is present
+  ansible.builtin.copy:
+    content: "{{ syncthing_https_cert }}"
+    dest: "{{ syncthing_home }}/https-cert.pem"
+    owner: "{{ syncthing_uid }}"
+    group: "{{ syncthing_gid }}"
+    mode: "0644"
+  when: syncthing_https_cert | length > 0
+  notify: Restart Syncthing
+  tags:
+    - config
+
+- name: Ensure HTTPS key file is present
+  ansible.builtin.copy:
+    content: "{{ syncthing_https_key }}"
+    dest: "{{ syncthing_home }}/https-key.pem"
+    owner: "{{ syncthing_uid }}"
+    group: "{{ syncthing_gid }}"
+    mode: "0600"
+  when: syncthing_https_key | length > 0
+  notify: Restart Syncthing
+  tags:
+    - config
+
+- name: Ensure Syncthing is configured
+  ansible.builtin.template:
+    src: config.xml.j2
+    dest: "{{ syncthing_home }}/config.xml"
+    owner: "{{ syncthing_uid }}"
+    group: "{{ syncthing_gid }}"
+    mode: "0640"
+  notify: Restart Syncthing
+  tags:
+    - config
+
+- name: Determine Docker volumes to mount
+  ansible.builtin.set_fact:
+    docker_volumes: "{{ docker_volumes }} + ['{{ item.host }}:{{ item.container }}:{{ item.perm | default('rw') }}']"
+  with_items: "{{ syncthing_volumes }}"
+  when: syncthing_volumes | length > 0
+
+- name: Ensure Syncthing container is created.
+  community.docker.docker_container:
+    container_default_behavior: no_defaults
+    detach: true
+    hostname: "{{ syncthing_name }}"
+    image: "{{ syncthing_image }}:{{ syncthing_imagetag }}"
+    interactive: false
+    labels: "{{ syncthing_labels }}"
+    name: "{{ syncthing_name }}"
+    restart_policy: always
+    state: started
+    ports:
+      - "{{ syncthing_port_web }}:8384"
+      - "{{ syncthing_port_tcp }}:22000/tcp"
+      - "{{ syncthing_port_udp }}:22000/udp"
+      - 21027:21027/udp    # Receive local discovery broadcasts
+    volumes: "{{ docker_volumes }}"
+    env:
+      PUID: "{{ syncthing_uid | quote }}"
+      PGID: "{{ syncthing_gid | quote }}"

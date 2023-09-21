@@ -1,0 +1,14 @@
+---
+- name: Restart Syncthing
+  ansible.builtin.command: "docker restart {{ item }}"
+  with_items:
+    - "{{ syncthing_name }}"
+
+- name: Remove Syncthing
+  ansible.builtin.command: "docker stop {{ item }} && docker rm {{ item }}"
+  register: results
+  with_items:
+    - "{{ syncthing_name }}"
+  failed_when: >-
+    results is failed and
+    "No such container" not in results.stderr | default(false)

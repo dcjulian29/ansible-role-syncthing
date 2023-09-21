@@ -1,0 +1,92 @@
+---
+syncthing_announce_global: true
+syncthing_announce_local: true
+syncthing_announce_server: default
+syncthing_api_key: odvLMvyhNjP4ouEmEYfFhmyXDwx5ejDP
+syncthing_autoaccept: false
+syncthing_cert: ""
+syncthing_compression: metadata
+syncthing_connection_limit: 0
+syncthing_crash_report: false
+syncthing_device_id: 5QYSLT7-IBP5DF5-4KKXD4O-WQCHLR6-Y5VDT56-PSHC44R-OWKT4KO-3IKHJAK
+syncthing_devices: []
+# - id: GCHDMZE-LLT7T35-Q46LIJD-DWXZOBF-JAO3TG6-KMDZJ5H-7VJKZMO-PTVEWAN
+#   name: node1
+#   compression: metadata
+#   introducer: false
+#   address: dynamic
+#   paused: false
+#   auto_accept: false
+#   max_send: 0     # Kbps
+#   max_recv: 0     # Kbps
+#   max_request: 0     # KiB
+#   untrusted: false
+syncthing_folders: []
+# - id: folder1
+#   label: Folder1
+#   path: "/tmp/folder1"
+#   type: sendreceive
+#   rescan_seconds: 3600
+#   file_watcher: true
+#   watcher_delay_seconds: 10
+#   ignore_perms: false
+#   paused: false
+#   device:
+#     - id: GCHDMZE-LLT7T35-Q46LIJD-DWXZOBF-JAO3TG6-KMDZJ5H-7VJKZMO-PTVEWAN
+#       password: hjhljklh
+#     - id: Q6FK7KK-E73ILOT-OCLYBJG-SEPOOPZ-ODIISTK-5J3Z5BB-7DLRQ2W-MO7XUQ5
+#   versioning:                     # Versioning Types
+#     type: trashcan
+#     cleanoutDays: 7               # How long can any version stay.
+# or  type: simple
+#     cleanoutDays: 7               # How long can any version stay.
+#     keep: 7                       # How many versions to keep regardless of time.
+# or  type: staggered
+#     cleanInterval: 3600           # Value not typically changed.
+#     maxAge: 62208000              # In "days" so 86400 seconds for each day.
+# or  type: external # https://docs.syncthing.net/users/versioning.html#external-file-versioning
+#     command: "/usr/local/bin/version-files.sh"
+syncthing_gid: 8384
+syncthing_gui_enabled: true
+syncthing_gui_password: ""
+syncthing_gui_theme: default
+syncthing_gui_tls: false
+syncthing_gui_user: ""
+syncthing_home: "/opt/{{ syncthing_name }}"
+syncthing_https_cert: ""
+syncthing_https_key: ""
+syncthing_image: syncthing/syncthing
+syncthing_imagetag: "1.24"
+syncthing_introducer: false
+syncthing_key: ""
+syncthing_labels: { }
+syncthing_max_send: 0     # Kbps
+syncthing_max_recv: 0     # Kbps
+syncthing_max_request: 0    # KiB
+syncthing_name: syncthing
+syncthing_nat_enabled: true
+syncthing_nat_lease_minutes: 60
+syncthing_nat_renew_minutes: 30
+syncthing_nat_timeout_seconds: 10
+syncthing_paused: false
+syncthing_port_tcp: 22000
+syncthing_port_udp: 22000
+syncthing_port_web: 8384
+syncthing_priority_lan_tcp: 10
+syncthing_priority_lan_udp: 20
+syncthing_priority_relay: 50
+syncthing_priority_wan_tcp: 30
+syncthing_priority_wan_udp: 40
+syncthing_reconnect_seconds: 60
+syncthing_relay_enabled: true
+syncthing_relay_reconnect_minutes: 10
+syncthing_uid: 8384
+syncthing_volumes: []
+# - host_path: "/tmp/Folder1"
+#   container_path: "/syncthing/folder1"
+#   type: "rw"
+# - host_path: "/tmp/Folder2"
+#   container_path: "/syncthing/folder2"
+# - host_path: "/tmp/Folder3"
+#   container_path: "/syncthing/folder3"
+#   type: "ro"
