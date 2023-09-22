@@ -91,7 +91,7 @@
         <user>{{ syncthing_gui_user }}</user>
 {% endif %}
 {% if syncthing_gui_password | length > 0 %}
-        <password>{{ syncthing_gui_password | password_hash('bcrypt', ansible_hostname) }}</password>
+        <password>{{ syncthing_gui_password | password_hash('bcrypt', ansible_machine_id[0:21] + '.') }}</password>
 {% endif %}
         <apikey>{{ syncthing_api_key }}</apikey>
         <theme>{{ syncthing_gui_theme }}</theme>
