@@ -82,11 +82,5 @@ syncthing_relay_enabled: true
 syncthing_relay_reconnect_minutes: 10
 syncthing_uid: 8384
 syncthing_volumes: []
-# - host_path: "/tmp/Folder1"
-#   container_path: "/syncthing/folder1"
-#   type: "rw"
-# - host_path: "/tmp/Folder2"
-#   container_path: "/syncthing/folder2"
-# - host_path: "/tmp/Folder3"
-#   container_path: "/syncthing/folder3"
-#   type: "ro"
+# - host: "/tmp/folder1"
+#   container: "/sync/folder1"

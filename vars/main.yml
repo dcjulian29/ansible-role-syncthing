@@ -2,4 +2,4 @@
 docker_volumes:
   - /etc/localtime:/etc/localtime:ro
   - /etc/timezone:/etc/timezone:ro
-  - "{{ syncthing_home }}:/var/syncthing/config:rw"
+  - "{{ syncthing_home }}:/var/syncthing/config"
