@@ -102,7 +102,7 @@
 
 - name: Determine Docker volumes to mount
   ansible.builtin.set_fact:
-    docker_volumes: "{{ docker_volumes + [ item.host + ':' + item.container ] }}"
+    docker_volumes: "{{ docker_volumes + [item.host + ':' + item.container] }}"
   with_items: "{{ syncthing_volumes }}"
   when: syncthing_volumes | length > 0
 
