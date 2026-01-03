@@ -56,7 +56,7 @@ syncthing_home: "/opt/{{ syncthing_name }}"
 syncthing_https_cert: ""
 syncthing_https_key: ""
 syncthing_image: syncthing/syncthing
-syncthing_imagetag: "1.24"
+syncthing_imagetag: "2"
 syncthing_introducer: false
 syncthing_key: ""
 syncthing_labels: { }
