@@ -52,7 +52,7 @@ syncthing_gui_password: ""
 syncthing_gui_theme: default
 syncthing_gui_tls: false
 syncthing_gui_user: ""
-syncthing_home: "/opt/{{ syncthing_name }}"
+syncthing_home: /opt/syncthing
 syncthing_https_cert: ""
 syncthing_https_key: ""
 syncthing_image: syncthing/syncthing
