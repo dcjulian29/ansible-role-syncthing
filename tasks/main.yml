@@ -1,8 +1,8 @@
 ---
 - name: Ensure syncthing group is present
   ansible.builtin.group:
-    name: "{{ syncthing_name }}"
     gid: "{{ syncthing_gid }}"
+    name: "{{ syncthing_name }}"
     state: present
 
 - name: Ensure syncthing user is present
@@ -33,6 +33,7 @@
 
 - name: Pull Syncthing docker image
   community.docker.docker_image:
+    force_source: true
     name: "{{ syncthing_image }}"
     source: pull
     tag: "{{ syncthing_imagetag }}"
