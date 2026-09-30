@@ -3,3 +3,15 @@ docker_volumes:
   - /etc/localtime:/etc/localtime:ro
   - /etc/timezone:/etc/timezone:ro
   - "{{ syncthing_home }}:/var/syncthing/config"
+
+# Host path of a folder's container path, via syncthing_volumes; empty when
+# the folder is not on a mounted volume.
+_syncthing_folder_host_path: >-
+  {%- set ns = namespace(path='') -%}
+  {%- for v in syncthing_volumes -%}
+  {%- if item.path == v.container or item.path.startswith(v.container ~ '/') -%}
+  {%- set ns.path = v.host ~ item.path[v.container | length:] -%}
+  {%- endif -%}
+  {%- endfor -%}
+  {{ ns.path }}
+_syncthing_folder_ignores: "{{ syncthing_ignores + item.ignores | default([]) }}"

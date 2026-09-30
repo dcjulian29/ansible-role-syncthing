@@ -30,6 +30,8 @@ syncthing_folders: []
 #   file_watcher: true
 #   watcher_delay_seconds: 10
 #   ignore_perms: false
+#   ignores:                        # Added to syncthing_ignores in .stignore
+#     - "*.tmp"
 #   paused: false
 #   device:
 #     - id: GCHDMZE-LLT7T35-Q46LIJD-DWXZOBF-JAO3TG6-KMDZJ5H-7VJKZMO-PTVEWAN
@@ -55,6 +57,8 @@ syncthing_gui_user: ""
 syncthing_home: /opt/syncthing
 syncthing_https_cert: ""
 syncthing_https_key: ""
+syncthing_ignores: []
+# - "(?d)@eaDir"
 syncthing_image: syncthing/syncthing
 syncthing_imagetag: "2"
 syncthing_introducer: false
