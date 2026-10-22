@@ -81,7 +81,7 @@ syncthing_priority_lan_udp: 20
 syncthing_priority_relay: 50
 syncthing_priority_wan_tcp: 30
 syncthing_priority_wan_udp: 40
-syncthing_reconnect_seconds: 60
+syncthing_reconnect_seconds: 20
 syncthing_relay_enabled: true
 syncthing_relay_reconnect_minutes: 10
 syncthing_uid: 8384

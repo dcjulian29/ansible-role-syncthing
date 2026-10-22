@@ -1,8 +1,8 @@
-<configuration version="37">
-{% for folder in syncthing_folders %}
-    <folder id="{{ folder.id }}" label="{{ folder.label }}" path="{{ folder.path }}" type="{{ folder.type | default('sendreceive') }}" rescanIntervalS="{{ folder.rescan_seconds | default(3600) }}" fsWatcherEnabled="{{ folder.file_watcher | default(true) | to_json }}" fsWatcherDelayS="{{ folder.watcher_delay_seconds | default(10) }}" ignorePerms="{{ folder.ignore_perms | default(false) }}" autoNormalize="true">
+<configuration version="52">
+{% for folder in syncthing_folders | sort(attribute='id') %}
+    <folder id="{{ folder.id }}" label="{{ folder.label }}" path="{{ folder.path }}" type="{{ folder.type | default('sendreceive') }}" rescanIntervalS="{{ folder.rescan_seconds | default(3600) }}" fsWatcherEnabled="{{ folder.file_watcher | default(true) | to_json }}" fsWatcherDelayS="{{ folder.watcher_delay_seconds | default(10) }}" fsWatcherTimeoutS="0" ignorePerms="{{ folder.ignore_perms | default(false) | to_json }}" autoNormalize="true">
         <filesystemType>basic</filesystemType>
-{% for device in folder.devices %}
+{% for device in folder.devices | syncthing_device_sort %}
         <device id="{{ device.id }}" introducedBy="">
             <encryptionPassword>{{ device.password | default('') }}</encryptionPassword>
         </device>
@@ -39,15 +39,14 @@
         <ignoreDelete>{{ folder.ignore_delete | default(false) | to_json }}</ignoreDelete>
         <scanProgressIntervalS>{{ folder.scan_interval_seconds | default(0) }}</scanProgressIntervalS>
         <pullerPauseS>{{ folder.puller_pause_seconds | default(0) }}</pullerPauseS>
+        <pullerDelayS>1</pullerDelayS>
         <maxConflicts>{{ folder.max_conflicts | default(10) }}</maxConflicts>
         <disableSparseFiles>{{ folder.disable_sparse | default(false) | to_json }}</disableSparseFiles>
-        <disableTempIndexes>{{ folder.disable_index | default(false) | to_json }}</disableTempIndexes>
         <paused>{{ folder.paused | default(false) | to_json }}</paused>
-        <weakHashThresholdPct>{{ folder.hash_threshold_percent | default(25) }}</weakHashThresholdPct>
         <markerName>.stfolder</markerName>
         <copyOwnershipFromParent>{{ folder.copy_parent_owner | default(false) | to_json }}</copyOwnershipFromParent>
         <modTimeWindowS>0</modTimeWindowS>
-        <maxConcurrentWrites>2</maxConcurrentWrites>
+        <maxConcurrentWrites>16</maxConcurrentWrites>
         <disableFsync>{{ folder.disable_fsync | default(false) | to_json }}</disableFsync>
         <blockPullOrder>standard</blockPullOrder>
         <copyRangeMethod>standard</copyRangeMethod>
@@ -57,12 +56,16 @@
         <sendOwnership>{{ folder.send_owner | default(false) | to_json }}</sendOwnership>
         <syncXattrs>{{ folder.sync_extended_attr | default(false) | to_json }}</syncXattrs>
         <sendXattrs>{{ folder.send_extended_attr | default(false) | to_json }}</sendXattrs>
+        <blockIndexing>true</blockIndexing>
         <xattrFilter>
             <maxSingleEntrySize>{{ folder.max_attr_size_single | default(1024) }}</maxSingleEntrySize>
             <maxTotalSize>{{ folder.max_attr_size_total | default(4096) }}</maxTotalSize>
         </xattrFilter>
     </folder>
 {% endfor %}
+{# This host sits among its peers in ID order, not first. #}
+{% for device in ([{'id': syncthing_device_id}] + syncthing_devices) | syncthing_device_sort %}
+{% if device.id == syncthing_device_id %}
     <device id="{{ syncthing_device_id }}" name="{{ syncthing_name }}" compression="{{ syncthing_compression }}" introducer="{{ syncthing_introducer | to_json }}" skipIntroductionRemovals="false" introducedBy="">
         <address>dynamic</address>
         <paused>{{ syncthing_paused | to_json }}</paused>
@@ -72,8 +75,9 @@
         <maxRequestKiB>{{ syncthing_max_request }}</maxRequestKiB>
         <untrusted>false</untrusted>
         <remoteGUIPort>0</remoteGUIPort>
+        <numConnections>0</numConnections>
     </device>
-{% for device in syncthing_devices %}
+{% else %}
     <device id="{{ device.id }}" name="{{ device.name }}" compression="{{ device.compression | default('metadata') }}" introducer="{{ device.introducer | default(false) | to_json }}" skipIntroductionRemovals="false" introducedBy="">
         <address>{{ device.address | default('dynamic') }}</address>
         <paused>{{ device.paused | default(false) | to_json }}</paused>
@@ -83,9 +87,11 @@
         <maxRequestKiB>{{ device.max_request | default(0) }}</maxRequestKiB>
         <untrusted>{{ device.untrusted | default(false) | to_json }}</untrusted>
         <remoteGUIPort>0</remoteGUIPort>
+        <numConnections>0</numConnections>
     </device>
+{% endif %}
 {% endfor %}
-    <gui enabled="{{ syncthing_gui_enabled | to_json }}" tls="{{ syncthing_gui_tls | to_json }}" debugging="false">
+    <gui enabled="{{ syncthing_gui_enabled | to_json }}" tls="{{ syncthing_gui_tls | to_json }}" sendBasicAuthPrompt="false">
         <address>0.0.0.0:8384</address>
 {% if syncthing_gui_user | length > 0 %}
         <user>{{ syncthing_gui_user }}</user>
@@ -93,8 +99,11 @@
 {% if syncthing_gui_password | length > 0 %}
         <password>{{ syncthing_gui_password | password_hash('bcrypt', ansible_facts['machine_id'][0:21] + '.') }}</password>
 {% endif %}
+        <metricsWithoutAuth>false</metricsWithoutAuth>
         <apikey>{{ syncthing_api_key }}</apikey>
         <theme>{{ syncthing_gui_theme }}</theme>
+        <sessionCookieDurationS>604800</sessionCookieDurationS>
+        <sessionCookiePath>/</sessionCookiePath>
     </gui>
     <ldap></ldap>
     <options>
@@ -123,14 +132,12 @@
         <autoUpgradeIntervalH>0</autoUpgradeIntervalH>
         <upgradeToPreReleases>false</upgradeToPreReleases>
         <keepTemporariesH>24</keepTemporariesH>
-        <cacheIgnoredFiles>false</cacheIgnoredFiles>
         <progressUpdateIntervalS>5</progressUpdateIntervalS>
         <limitBandwidthInLan>false</limitBandwidthInLan>
         <minHomeDiskFree unit="%">1</minHomeDiskFree>
         <releasesURL>https://upgrades.syncthing.net/meta.json</releasesURL>
         <overwriteRemoteDeviceNamesOnConnect>false</overwriteRemoteDeviceNamesOnConnect>
         <tempIndexMinBlocks>10</tempIndexMinBlocks>
-        <unackedNotificationID>authenticationUserAndPassword</unackedNotificationID>
         <trafficClass>0</trafficClass>
         <setLowPriority>true</setLowPriority>
         <maxFolderConcurrency>0</maxFolderConcurrency>
@@ -139,13 +146,13 @@
         <stunKeepaliveStartS>180</stunKeepaliveStartS>
         <stunKeepaliveMinS>20</stunKeepaliveMinS>
         <stunServer>default</stunServer>
-        <databaseTuning>auto</databaseTuning>
         <maxConcurrentIncomingRequestKiB>0</maxConcurrentIncomingRequestKiB>
         <announceLANAddresses>false</announceLANAddresses>
         <sendFullIndexOnUpgrade>false</sendFullIndexOnUpgrade>
+        <auditEnabled>false</auditEnabled>
+        <auditFile></auditFile>
         <connectionLimitEnough>0</connectionLimitEnough>
         <connectionLimitMax>{{ syncthing_connection_limit }}</connectionLimitMax>
-        <insecureAllowOldTLSVersions>false</insecureAllowOldTLSVersions>
         <connectionPriorityTcpLan>{{ syncthing_priority_lan_tcp }}</connectionPriorityTcpLan>
         <connectionPriorityQuicLan>{{ syncthing_priority_lan_udp }}</connectionPriorityQuicLan>
         <connectionPriorityTcpWan>{{ syncthing_priority_wan_tcp }}</connectionPriorityTcpWan>
@@ -154,7 +161,7 @@
         <connectionPriorityUpgradeThreshold>0</connectionPriorityUpgradeThreshold>
     </options>
     <defaults>
-        <folder id="" label="" path="~" type="sendreceive" rescanIntervalS="3600" fsWatcherEnabled="true" fsWatcherDelayS="10" ignorePerms="false" autoNormalize="true">
+        <folder id="" label="" path="~" type="sendreceive" rescanIntervalS="3600" fsWatcherEnabled="true" fsWatcherDelayS="10" fsWatcherTimeoutS="0" ignorePerms="false" autoNormalize="true">
             <filesystemType>basic</filesystemType>
             <device id="{{ syncthing_device_id }}" introducedBy="">
                 <encryptionPassword></encryptionPassword>
@@ -172,15 +179,14 @@
             <ignoreDelete>false</ignoreDelete>
             <scanProgressIntervalS>0</scanProgressIntervalS>
             <pullerPauseS>0</pullerPauseS>
+            <pullerDelayS>1</pullerDelayS>
             <maxConflicts>10</maxConflicts>
             <disableSparseFiles>false</disableSparseFiles>
-            <disableTempIndexes>false</disableTempIndexes>
             <paused>false</paused>
-            <weakHashThresholdPct>25</weakHashThresholdPct>
             <markerName>.stfolder</markerName>
             <copyOwnershipFromParent>false</copyOwnershipFromParent>
             <modTimeWindowS>0</modTimeWindowS>
-            <maxConcurrentWrites>2</maxConcurrentWrites>
+            <maxConcurrentWrites>16</maxConcurrentWrites>
             <disableFsync>false</disableFsync>
             <blockPullOrder>standard</blockPullOrder>
             <copyRangeMethod>standard</copyRangeMethod>
@@ -190,6 +196,7 @@
             <sendOwnership>false</sendOwnership>
             <syncXattrs>false</syncXattrs>
             <sendXattrs>false</sendXattrs>
+            <blockIndexing>true</blockIndexing>
             <xattrFilter>
                 <maxSingleEntrySize>1024</maxSingleEntrySize>
                 <maxTotalSize>4096</maxTotalSize>
@@ -204,6 +211,7 @@
             <maxRequestKiB>0</maxRequestKiB>
             <untrusted>false</untrusted>
             <remoteGUIPort>0</remoteGUIPort>
+            <numConnections>0</numConnections>
         </device>
         <ignores></ignores>
     </defaults>
