@@ -1,0 +1,12 @@
+---
+- name: Cleanup
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - vars.yml
+  tasks:
+    - name: Remove the Syncthing test container
+      community.docker.docker_container:
+        name: "{{ molecule_syncthing_container }}"
+        state: absent
+        force_kill: true

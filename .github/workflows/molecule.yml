@@ -1,0 +1,31 @@
+---
+name: Molecule
+'on':
+  push:
+
+  pull_request:
+
+  workflow_dispatch:
+
+  # The role deploys the floating syncthing/syncthing:2 tag, so a new Syncthing
+  # release can change the config schema without any change here. A weekly run
+  # catches that before the next run does.
+  schedule:
+    - cron: "0 6 * * 1"
+
+jobs:
+  molecule:
+    runs-on: ubuntu-latest
+    env:
+      PYTHON_VERSION: "3.12"
+
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      - run: pip3 install ansible-core molecule docker
+
+      - run: molecule test

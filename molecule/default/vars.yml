@@ -1,0 +1,3 @@
+---
+molecule_syncthing_container: molecule-syncthing
+molecule_syncthing_home: /var/syncthing/config

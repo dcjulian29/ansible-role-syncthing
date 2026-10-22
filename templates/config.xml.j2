@@ -1,5 +1,5 @@
 <configuration version="52">
-{% for folder in syncthing_folders | sort(attribute='id') %}
+{% for folder in syncthing_folders | sort(attribute='id', case_sensitive=true) %}
     <folder id="{{ folder.id }}" label="{{ folder.label }}" path="{{ folder.path }}" type="{{ folder.type | default('sendreceive') }}" rescanIntervalS="{{ folder.rescan_seconds | default(3600) }}" fsWatcherEnabled="{{ folder.file_watcher | default(true) | to_json }}" fsWatcherDelayS="{{ folder.watcher_delay_seconds | default(10) }}" fsWatcherTimeoutS="0" ignorePerms="{{ folder.ignore_perms | default(false) | to_json }}" autoNormalize="true">
         <filesystemType>basic</filesystemType>
 {% for device in folder.devices | syncthing_device_sort %}
@@ -127,7 +127,6 @@
         <urSeen>3</urSeen>
         <urUniqueID></urUniqueID>
         <urURL>https://data.syncthing.net/newdata</urURL>
-        <urPostInsecurely>false</urPostInsecurely>
         <urInitialDelayS>1800</urInitialDelayS>
         <autoUpgradeIntervalH>0</autoUpgradeIntervalH>
         <upgradeToPreReleases>false</upgradeToPreReleases>

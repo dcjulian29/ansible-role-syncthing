@@ -1,0 +1,41 @@
+---
+# Tests one thing: that templates/config.xml.j2 renders exactly what Syncthing
+# itself writes. If it does not, Syncthing rewrites config.xml on every start,
+# the next run sees a change, and the container restarts for nothing.
+#
+# The role's own tasks (Docker install, user, sysctl, the real container) are
+# not exercised here.
+dependency:
+  name: galaxy
+
+driver:
+  name: default
+  options:
+    managed: false
+    ansible_connection_options:
+      ansible_connection: local
+
+platforms:
+  - name: localhost
+
+provisioner:
+  name: ansible
+  env:
+    ANSIBLE_FILTER_PLUGINS: ${MOLECULE_PROJECT_DIRECTORY}/filter_plugins
+
+verifier:
+  name: ansible
+
+scenario:
+  # No create/destroy: there is no instance to build. prepare starts the
+  # Syncthing test container and cleanup removes it, first in case a previous
+  # run was interrupted, then again at the end.
+  test_sequence:
+    - dependency
+    - cleanup
+    - syntax
+    - prepare
+    - converge
+    - idempotence
+    - verify
+    - cleanup

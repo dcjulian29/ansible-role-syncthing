@@ -1,0 +1,38 @@
+---
+- name: Prepare
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+    - vars.yml
+  tasks:
+    # Always the newest image behind the role's floating tag, so a Syncthing
+    # release that changes the schema fails this test instead of production.
+    - name: Pull the Syncthing image the role deploys
+      community.docker.docker_image:
+        name: "{{ syncthing_image }}"
+        tag: "{{ syncthing_imagetag }}"
+        source: pull
+        force_source: true
+
+    # Idle, so nothing reads or rewrites config.xml until verify runs Syncthing
+    # on purpose.
+    - name: Start an idle Syncthing container to test against
+      community.docker.docker_container:
+        name: "{{ molecule_syncthing_container }}"
+        image: "{{ syncthing_image }}:{{ syncthing_imagetag }}"
+        entrypoint:
+          - tail
+          - -f
+          - /dev/null
+        state: started
+
+    # The certificate fixes this device's ID. The rendered config must list
+    # the same ID as its own device, or Syncthing adds it and rewrites the file.
+    - name: Generate the container's device certificate
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - syncthing
+          - generate
+          - "--home={{ molecule_syncthing_home }}"

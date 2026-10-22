@@ -1,0 +1,31 @@
+---
+- name: Converge
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+    - vars.yml
+    - fixtures.yml
+  tasks:
+    - name: Read the test container's device ID
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - syncthing
+          - device-id
+          - "--home={{ molecule_syncthing_home }}"
+      register: molecule_device_id
+      changed_when: false
+
+    - name: Render as that device
+      ansible.builtin.set_fact:
+        syncthing_device_id: "{{ molecule_device_id.stdout | trim }}"
+
+    - name: Render config.xml into the test container
+      community.docker.docker_container_copy_into:
+        container: "{{ molecule_syncthing_container }}"
+        container_path: "{{ molecule_syncthing_home }}/config.xml"
+        content: >-
+          {{ lookup('ansible.builtin.template',
+             lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') ~ '/templates/config.xml.j2') }}
+        mode: "0600"

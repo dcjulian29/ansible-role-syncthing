@@ -1,0 +1,83 @@
+---
+- name: Verify
+  hosts: localhost
+  gather_facts: false
+  vars_files:
+    - "{{ lookup('ansible.builtin.env', 'MOLECULE_PROJECT_DIRECTORY') }}/defaults/main.yml"
+    - vars.yml
+  tasks:
+    - name: Keep a copy of the rendered config.xml
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - cp
+          - "{{ molecule_syncthing_home }}/config.xml"
+          - "{{ molecule_syncthing_home }}/config.rendered.xml"
+      changed_when: false
+
+    - name: Start Syncthing on the rendered config
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - syncthing
+          - serve
+          - "--home={{ molecule_syncthing_home }}"
+          - --no-browser
+        detach: true
+      changed_when: false
+
+    - name: Wait for Syncthing's REST API
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - curl
+          - --silent
+          - --fail
+          - --header
+          - "X-API-Key: {{ syncthing_api_key }}"
+          - http://127.0.0.1:8384/rest/system/ping
+      register: molecule_ping
+      until: molecule_ping.rc == 0
+      retries: 30
+      delay: 1
+      changed_when: false
+
+    # A config already at the current schema is NOT rewritten at startup, so
+    # starting Syncthing alone proves nothing. Putting its own config back
+    # through the API makes it save, and it saves in its canonical form - the
+    # form it will write the first time anything changes in production. Any
+    # difference from the template is churn waiting to happen.
+    - name: Make Syncthing save its config in its own form
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - sh
+          - -c
+          - >-
+            curl --silent --fail --header "X-API-Key: $KEY" $API |
+            curl --silent --fail --request PUT --header "X-API-Key: $KEY"
+            --header 'Content-Type: application/json' --data-binary @- $API
+        env:
+          KEY: "{{ syncthing_api_key }}"
+          API: http://127.0.0.1:8384/rest/config
+      changed_when: false
+
+    - name: Compare what Syncthing left with what the template rendered
+      community.docker.docker_container_exec:
+        container: "{{ molecule_syncthing_container }}"
+        argv:
+          - diff
+          - -u
+          - "{{ molecule_syncthing_home }}/config.rendered.xml"
+          - "{{ molecule_syncthing_home }}/config.xml"
+      register: molecule_config_diff
+      changed_when: false
+      failed_when: molecule_config_diff.rc not in [0, 1]
+
+    # A failure here usually means a new Syncthing release changed its config
+    # schema: the diff shows exactly which elements to update in the template.
+    - name: Assert Syncthing kept config.xml unchanged
+      ansible.builtin.assert:
+        that: molecule_config_diff.rc == 0
+        success_msg: Syncthing accepted the rendered config.xml as-is.
+        fail_msg: "Syncthing rewrote config.xml:\n{{ molecule_config_diff.stdout }}"
