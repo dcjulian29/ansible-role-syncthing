@@ -59,6 +59,10 @@ syncthing_https_cert: ""
 syncthing_https_key: ""
 syncthing_ignores: []
 # - "(?d)@eaDir"
+# Mode for each folder's .stignore. Set it to "" to leave the mode alone on
+# storage that will not keep one - Some host that provide NFS shares with Windows ACLs
+# reports 0777 whatever chmod sets, so a fixed mode reports changed on every run.
+syncthing_ignores_mode: "0644"
 syncthing_image: syncthing/syncthing
 syncthing_imagetag: "2"
 syncthing_introducer: false

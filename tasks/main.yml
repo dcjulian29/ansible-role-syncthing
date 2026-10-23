@@ -120,7 +120,7 @@
   ansible.builtin.copy:
     content: "{{ _syncthing_folder_ignores | join('\n') }}\n"
     dest: "{{ _syncthing_folder_host_path }}/.stignore"
-    mode: "0644"
+    mode: "{{ syncthing_ignores_mode | default(omit, true) }}"
   loop: "{{ syncthing_folders }}"
   loop_control:
     label: "{{ item.label }}"
