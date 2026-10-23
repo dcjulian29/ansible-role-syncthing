@@ -1,1 +1,3 @@
 .ansible
+# Written by Python when Ansible loads filter_plugins/.
+__pycache__/
